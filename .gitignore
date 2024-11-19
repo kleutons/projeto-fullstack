@@ -1,0 +1,46 @@
+# Ignorar node_modules em qualquer subpasta
+**/node_modules/
+
+# Ignorar arquivos de log em qualquer subpasta
+**/*.log
+
+# Ignorar arquivos de build e distribuições em qualquer subpasta
+**/dist/
+**/build/
+
+# Ignorar arquivos de ambiente
+**/.env
+
+# Ignorar arquivos específicos de sistemas operacionais
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Arquivos específicos de IDEs
+.idea
+*.iws
+*.iml
+*.ipr
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Arquivos temporários de sistemas operacionais
+*.swp
+*.swo
+
+#DataBae
+database/data

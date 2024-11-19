@@ -1,0 +1,11 @@
+# dockerfiles/Dockerfile.Postgre
+FROM postgres:13.1-alpine
+
+ENV POSTGRES_USER=${POSTGRES_USER}
+ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+ENV POSTGRES_DB=${POSTGRES_DB}
+
+COPY ./database/create_tables.sql /docker-entrypoint-initdb.d/
+
+# Configura o healthcheck dentro do Dockerfile
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 CMD pg_isready -U $POSTGRES_USER || exit 1
