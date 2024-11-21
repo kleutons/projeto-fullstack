@@ -26,10 +26,6 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
-    }
-
     public User saveUser(User user) {
         // Validar a senha antes de criptografar
         validatePassword(user.getPassword());

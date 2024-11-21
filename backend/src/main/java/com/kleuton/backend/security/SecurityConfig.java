@@ -3,6 +3,7 @@ package com.kleuton.backend.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,31 +22,34 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 
     @Autowired
-    private JWTFilter jwtFilter;
-    @Autowired
-    private UserDetailsServiceImpl uds;
+    SecurityFilter securityFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable())
-                .httpBasic(basic -> basic.disable())
-                .cors(cors -> {
-                }) // Habilita CORS sem configuracoes adicionais
-                .authorizeHttpRequests(auth -> auth
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+
+        return httpSecurity
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**", "/swagger-ui/**", "/v3/api-docs/**", "/actuator/**").permitAll()
                         .requestMatchers("/user/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
-                .userDetailsService(uds) // Configura o serviço de detalhes do usuário
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint(
-                                (request, response, authException) -> response
-                                        .sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .exceptionHandling(handling -> handling.authenticationEntryPoint((request, response, authException) -> {
+                    System.out.println("Erro de autenticação: " + authException.getMessage());
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                }).accessDeniedHandler((request, response, accessDeniedException) -> {
+                    System.out.println("Acesso negado: " + accessDeniedException.getMessage());
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied!");
+                }))
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class) // Adiciona filtro JWT
+                .build();
+    }
 
-        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona filtro JWT
-
-        return http.build();
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, accessDeniedException) -> {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied!");
+        };
     }
 
     @Bean
@@ -53,7 +58,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration)
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager(); // Expõe o gerenciador de autenticação
     }

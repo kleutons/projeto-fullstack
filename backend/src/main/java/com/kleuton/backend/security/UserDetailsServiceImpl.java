@@ -1,19 +1,13 @@
 package com.kleuton.backend.security;
 
-import java.util.Collections;
-import java.util.Optional;
-
+import com.kleuton.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import com.kleuton.backend.entity.User;
-import com.kleuton.backend.repository.UserRepository;
-
-@Component
+@Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
@@ -21,15 +15,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Optional<User> userExisted = userRepository.findByEmail(email);
-        if (userExisted.isEmpty())
-            throw new UsernameNotFoundException("Não foi possível encontrar usuário com o email = " + email);
-
-        User user = userExisted.get();
-        return new org.springframework.security.core.userdetails.User(
-                email,
-                user.getPassword(),
-                // Define, de forma estatica, o perfil do usuario encontrado
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+        UserDetails user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException("Usuário não encontrado: " + email);
+        }
+        return user;
     }
 }
