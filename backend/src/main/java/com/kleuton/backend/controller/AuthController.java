@@ -49,13 +49,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/teste")
-    public String helloWorld(@RequestBody AuthenticationDTO data) {
-        System.out.println("Body: " + data);
-
-        return "Body: " + data;
-    }
-
     @PostMapping("/login")
     public Map<String, Object> loginHandle(@RequestBody AuthenticationDTO data, HttpServletResponse response) {
 
